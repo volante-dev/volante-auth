@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   await supabase.auth.exchangeCodeForSession(code);
 
-  const validatedNext: string = isValidInternalPath(next) ? (next as string) : '/oauth/consent';
+  const validatedNext: string = isValidInternalPath(next) ? (next as string) : '/';
 
   return NextResponse.redirect(new URL(validatedNext, request.url));
 }

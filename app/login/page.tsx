@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 function buildCallbackUrl(next: string | null): string {
-  return `https://auth.vlnt.st/auth/callback?next=${encodeURIComponent(next ?? '/oauth/consent')}`
+  return `https://auth.vlnt.st/auth/callback?next=${encodeURIComponent(next ?? '/')}`
 }
 
 function LoginPageInner() {
@@ -31,7 +31,7 @@ function LoginPageInner() {
       setError(authError.message)
       return
     }
-    router.push(next ?? '/oauth/consent')
+    router.push(next ?? '/')
   }
 
   async function handleMagicLink(e: FormEvent<HTMLFormElement>) {
