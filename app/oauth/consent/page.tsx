@@ -1,14 +1,13 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { OAuthAuthorizationDetails } from '@supabase/auth-js'
 
 type ActionState = 'idle' | 'loading'
 
 function ConsentPageInner() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const authorizationId = searchParams.get('authorization_id')
 
@@ -26,17 +25,18 @@ function ConsentPageInner() {
         return
       }
 
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (!sessionData.session) {
-        router.push(
-          '/login?next=' +
-            encodeURIComponent('/oauth/consent?authorization_id=' + authorizationId)
-        )
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+      if (userError || !userData.user) {
+        redirectToLogin(authorizationId)
         return
       }
 
       const { data, error } = await supabase.auth.oauth.getAuthorizationDetails(authorizationId)
       if (error) {
+        if (error.message === 'Auth session missing!') {
+          redirectToLogin(authorizationId)
+          return
+        }
         setPageError(error.message)
         setPageState('error')
         return
@@ -52,7 +52,7 @@ function ConsentPageInner() {
     }
 
     init()
-  }, [authorizationId, router])
+  }, [authorizationId])
 
   async function handleApprove() {
     if (!authorizationId) return
@@ -62,6 +62,10 @@ function ConsentPageInner() {
       skipBrowserRedirect: true,
     })
     if (error) {
+      if (error.message === 'Auth session missing!') {
+        redirectToLogin(authorizationId)
+        return
+      }
       setActionError(error.message)
       setActionState('idle')
       return
@@ -77,6 +81,10 @@ function ConsentPageInner() {
       skipBrowserRedirect: true,
     })
     if (error) {
+      if (error.message === 'Auth session missing!') {
+        redirectToLogin(authorizationId)
+        return
+      }
       setActionError(error.message)
       setActionState('idle')
       return
@@ -161,6 +169,12 @@ function ConsentPageInner() {
       </div>
     </div>
   )
+}
+
+function redirectToLogin(authorizationId: string) {
+  window.location.href =
+    '/login?next=' +
+    encodeURIComponent('/oauth/consent?authorization_id=' + authorizationId)
 }
 
 export default function ConsentPage() {

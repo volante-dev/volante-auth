@@ -26,11 +26,19 @@ function LoginPageInner() {
     setSuccess(null)
     setLoading(true)
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
     if (authError) {
+      setLoading(false)
       setError(authError.message)
       return
     }
+
+    const { data: sessionData } = await supabase.auth.getSession()
+    setLoading(false)
+    if (!sessionData.session) {
+      setError('Session introuvable après connexion')
+      return
+    }
+
     router.push(next ?? '/')
   }
 
